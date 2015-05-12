@@ -1,0 +1,34 @@
+// Place all the styles related to the GameDays controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+.top5 {
+  margin-top:5px;
+}
+
+.top-align {
+  margin-top: -1px;
+}
+
+.prevWeek {
+  float: right;
+}
+
+.arrow {
+  font-size:2.2em;
+  cursor:pointer;
+}
+
+.span {
+  border: none;
+}
+
+.nopad {
+  border-width:0 0 1px 0;
+}
+
+.gameday-week-points-label{
+  font-size: 70%;
+  margin: 0.8em;
+  color: #777;
+}

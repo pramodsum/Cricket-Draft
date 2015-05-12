@@ -1,0 +1,182 @@
+<% Rails.logger.info "Starting render of show template" %>
+<script>
+	var userId = <%= @user.id %>;
+	var gameweek = <%= @game_week %>;
+	var gameWeekTimeObj = <%= raw @game_week_time_obj.to_json.gsub("</", "<\\/")  %>;
+	var currentGameWeek = <%= @game_week %>;
+	var activeGameWeek = <%= @active_gameweek %>;
+	<% Rails.logger.info "Game Week is #{@game_week} and active game week is #{@active_gameweek}" %>
+	var players = <%= raw @nfl_players %>;
+	var stats = <%= raw @stats %>;
+	var userName = "<%= @user.name %>";
+	var isLoggedIn = <%= session[:user_id] %>
+	<% Rails.logger.info "Found @nfl_players" %>
+	<% if session[:user_id] == @user.id %>
+		<% Rails.logger.info "User_id #{@user.id} is same as session id #{session[:user_id]}" %>
+		var isUser = true;
+	<% else %>
+		<% Rails.logger.info "Didn't find user_id from session" %>
+		var isUser = false;
+	<% end %>
+</script>
+<div class="container">
+	<div class="row clearfix">
+		<div class="col-md-12 column">
+			<h1 class="team-name"> <%= @user.name %> - <%= @user.team_name %> </h1>
+			<h2 class="team-points"> <%= @user.points %> Points</h2>
+		</div>
+	</div>
+	<% Rails.logger.info "Succesfully rendered user name, team_name and points" %>
+	<div class="alert fade in alert-danger" id="swap-error" style="display:none;">
+	    <button type="button" class="close">×</button>
+		<span id="swap-error-msg"></span>
+	</div>
+	<div class="alert fade in alert-success" id="swap-success" style="display:none;">
+    	<button type="button" class="close">×</button>
+    		Successfully updated team roster
+	</div>
+	<% if @user.team_for_game_week(@game_week).game_week_team_players.size < 18 %>
+	<h4>Team Admin</h4>
+	<div id="adminBox" class="col-md-12">
+		<p>Please add a player to the team by selecting from the list below and pressing add player</p>
+		<div id="bloodhound">
+	  		<input class="typeahead" type="text" placeholder="Choose a player">
+	  		<button id="addPlayerButton" class="btn btn-primary add-btn">Add player</button>
+		</div>
+	</div>
+	<% end %>
+	<div class="row clearfix">
+		<div class="col-md-12 column">
+			<div class="col-md-1 column">
+				<span id="prevWeekBtn" title="View previous week" class="glyphicon glyphicon-arrow-left arrow"></span>
+			</div>
+			<div class="col-md-3 column fixture-label">
+				<h3 id="week_label" title="Week " align="center">Week <%= @user.team_for_game_week(@game_week).game_week.number %></h3>
+			</div>
+			<% Rails.logger.info "Successfully rendered game week number" %>
+			<div class="col-md-1">
+				<span id="nextWeekBtn" title="View next week" class="glyphicon glyphicon-arrow-right arrow"></span>
+			</div>
+			<div>
+				<span class="week-points-label"><%= @user.team_for_game_week(@game_week).points %> Points</span>
+			</div>
+			<% Rails.logger.info "Succesfully rendered game_week_team points" %>
+		</div>
+	</div>
+	<div id="rosters">
+		<div id="left-Box">
+			<h4>Active Roster</h3>
+			<table class="table table-condensed active-roster">
+				<tr>
+					<th>Player</th>
+					<th>Points</th>
+				</tr>
+				<% @user.team_for_game_week(@game_week).match_players_playing.each do |match_player| %>
+				<tr id="<%= match_player.id %>Row">
+					<td id="<%= match_player.id %>">
+						<span class="player-name"><%= match_player.nfl_player.name %></span><br />
+						<span class="player-info">
+							<span class="player-pos"><%= match_player.nfl_player.nfl_player_type.position_type %></span> - 
+							<%= match_player.nfl_player.nfl_team.name %>
+						</span>
+					</td>
+					<td><span id="<%= match_player.nfl_player.id %>_points" class="point-stats"><%= match_player.points %></span></td>
+				</tr>
+				<script>
+					$("#<%=match_player.nfl_player.id%>_points").hover(function(ev){
+					    $('#<%=match_player.nfl_player.id%>_stat_table').stop(true,true).fadeIn(); 
+					},function(ev){
+					    $('#<%=match_player.nfl_player.id%>_stat_table').stop(true,true).fadeOut();
+					}).mousemove(function(ev){
+					    $('#<%=match_player.nfl_player.id%>_stat_table').css({top:(ev.clientY-790), left: -75});
+					});
+				</script>
+				<% end %>
+			</table>
+			<% Rails.logger.info "Succesfully rendered active-roster players" %>
+		</div>
+		<div id="right-Box">
+			<h4>Bench</h3>
+			<table id="benchedTable" class="table table-condensed benched">
+				<tr>
+					<th>Player</th>
+					<th>Points</th>
+				</tr>
+				<% @user.team_for_game_week(@game_week).match_players_benched.each do |match_player| %>
+				<tr id="<%= match_player.id %>Row">
+					<td id="<%= match_player.id %>">
+						<span class="player-name"><%= match_player.nfl_player.name %></span><br />
+						<span class="player-info">
+							<span class="player-pos"><%= match_player.nfl_player.nfl_player_type.position_type %></span> - 
+							<%= match_player.nfl_player.nfl_team.name %>
+						</span>
+					</td>
+					<td><span id="<%= match_player.nfl_player.id %>_points" class="point-stats"><%= match_player.points %></span></td>
+				</tr>
+				<script>
+					$("#<%=match_player.nfl_player.id%>_points").hover(function(ev){
+					    $('#<%=match_player.nfl_player.id%>_stat_table').stop(true,true).fadeIn(); 
+					},function(ev){
+					    $('#<%=match_player.nfl_player.id%>_stat_table').stop(true,true).fadeOut();
+					}).mousemove(function(ev){
+					    $('#<%=match_player.nfl_player.id%>_stat_table').css({top:(ev.clientY-790), left: 550});
+					});
+				</script>
+				<% end %>
+			</table>
+			<% Rails.logger.info "Succesfully rendered benched-roster players" %>
+			<% if session[:user_id] == @user.id && @active_gameweek == @game_week && !@game_week_time_obj[:locked] %>
+			<button id="swapButton" class="btn btn-primary btn-lg swap-player-btn">Save changes</button>
+			<% end %>
+		</div>
+	</div>
+	<div id="stat-detail">
+	</div>
+	<div class="row clearfix">
+		<div class="col-md-12 column">			
+			<div class="modal fade in" id="requestModal" role="dialog" aria-labelledby="transferrequest" aria-hidden="false">
+				<div id="register-user-dialog" class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+							<h4 class="modal-title" id="myModalLabel">
+								Transfer Request Bid
+							</h4>
+						</div>
+						<% if !session[:user_id].nil? %>
+							<%= form_for :transfer_request, :url => transfer_request_bid_path, :html => {:id => 'create_transfer'}, :method => :post  do |f| %>
+							 <div class="modal-body">
+								<div id="row1">
+									<span>Player Offered:</span>
+									<span class="pull-right">Player Requested:</span>
+								</div>
+								<div id="row2">
+									<select id="my-player" class="selectpicker my-player">
+									 <%= return_player_name_for_active_game_week_team(session[:user_id]).each do |u| %>
+									 	<option id="nfl_p_id-<%= u[0] %>" data-subtext="<%= u[2] %>"><%= u[1] %></option>
+									 <% end %>
+									</select>
+									<select id="opponent-player" class="selectpicker opponent-player pull-right">
+									 <%= return_player_name_for_active_game_week_team(@user.id).each do |u| %>
+									 	<option id="nfl_p_id-<%= u[0] %>" data-subtext="<%= u[2] %>"><%= u[1] %></option>
+									 <% end %>
+									</select>
+	 						 	</div> 
+	 						 	<%= f.hidden_field :offered_player_id, :id=>'offered_player_id' %>
+	 						 	<%= f.hidden_field :target_player_id, :id=>'requested_player_id' %>
+	 						 	<%= f.hidden_field :offering_user_id, :id=>'offering_user_id', :value=>session[:user_id] %>
+	 						 	<%= f.hidden_field :target_user_id, :id=>'target_user_id', :value=>@user.id %>
+							  </div>
+							  <div class="modal-footer">
+							    <a class="btn btn-default btn-grey" data-dismiss="modal">Cancel</a>
+							    <button type="submit" class="btn btn-default">Submit Transfer Request</button>
+							  </div>
+							<% end %>	
+						<% end %>
+					</div>	
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<%= javascript_include_tag "team_show" %>

@@ -1,0 +1,94 @@
+<%= javascript_include_tag "game_days" %>
+<script>
+  var pageGameWeek = <%= @page_game_week %>;
+  var currentGameWeek = <%= @current_game_week %>;
+  var playerData = <%= raw @player_data %>
+</script>
+<div class="container">
+  <div class="row clearfix ">
+    <div class="col-md-3 column"></div>
+    <div class="col-md-1 column">
+      <% if @page_game_week > 1 %>
+        <%= link_to "/game_day/#{@page_game_week - 1}", method: :get do %>
+          <%= content_tag(:span, "", :class => "glyphicon glyphicon-arrow-left arrow") %>
+        <% end %>
+      <% end %>
+    </div>
+    <div class="col-md-4 column">
+      <h1 align="center" class="top-align">Week <%= @page_game_week %></h1>
+    </div>
+    <div class="col-md-1 column">
+      <% if @page_game_week < @current_game_week %>
+        <%= link_to "/game_day/#{@page_game_week + 1}", method: :get do %>
+          <%= content_tag(:span, "", :class => "glyphicon glyphicon-arrow-right arrow") %>
+        <% end %>
+      <% end %>
+    </div>
+    <div class="col-md-3 column"/></div>
+  </div>
+  <div class="row">
+    <div class="col-md-7">
+      <h3>Weekly Standings</h3>
+      <table class="table sortable">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Team Name</th>
+            <th data-defaultsort="desc">Points</th>
+            <th>Bench</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @users.each_with_index do |user, index| %>
+          <% if index == 0 %>
+          <tr class="success">
+          <% elsif index == @users.size - 1 %>
+          <tr class="danger">
+          <% else %>
+          <tr>
+          <% end %>
+            <% game_week_team = user.team_for_game_week(@page_game_week) %>
+            <td><%= link_to user.name, controller: :user, action: :show, user_id: user.id %></td>
+            <td><%= user.team_name %></td>
+            <td><%= game_week_team.points %></td>
+            <td><%= game_week_team.bench_points %></td>
+          </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <div class="row">
+        <div class="col-md-6">
+        	<h3>Player Finder</h3>
+	        <div id="bloodhound">
+	          <input id="playerText" class="typeahead small-typeahead center" type="text" placeholder="Find Player's Team">
+	        </div>
+	        <div class="row top5">
+	          <p id="teamText" class="text-center">User - Team</p>
+	          <p id = "playingOrBenched" class="text-success text-center"><strong>Playing</strong></p>
+	        </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <h3>Team of the week <span class="gameday-week-points-label"> <%= @best_team.reduce(0) { |total, match_player| total+= match_player.points} %> points</span></h3>
+      <table class="table">
+        <tr>
+          <th>Player</th>
+          <th>Points</th>
+        </tr>
+        <% @best_team.each do |match_player| %>
+        <tr id="<%= match_player.id %>Row">
+          <td id="<%= match_player.id %>" class="nopad">
+            <span class="player-name"><%= match_player.nfl_player.name %></span><br />
+            <span class="player-info">
+              <span class="player-pos"><%= match_player.nfl_player.nfl_player_type.position_type %></span> - 
+              <%= match_player.nfl_player.nfl_team.name %>
+            </span>
+          </td>
+          <td><span id="<%= match_player.nfl_player.id %>_points" class="point-stats"><%= match_player.points %></span></td>
+        </tr>
+        <% end %>
+      </table>
+    </div>
+  </div>
+</div>
